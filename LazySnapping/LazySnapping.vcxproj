@@ -155,10 +155,6 @@
     <ClInclude Include="WatershedHelper.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="CHANGES.TXT" />
-    <Text Include="README.TXT" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="LazySnapping.cpp" />
     <ClCompile Include="maxflow.cpp" />

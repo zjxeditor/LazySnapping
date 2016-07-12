@@ -35,14 +35,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="CHANGES.TXT">
-      <Filter>MaxFlow</Filter>
-    </Text>
-    <Text Include="README.TXT">
-      <Filter>MaxFlow</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="graph.cpp">
       <Filter>MaxFlow</Filter>
     </ClCompile>
