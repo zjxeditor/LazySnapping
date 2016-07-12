@@ -85,6 +85,11 @@ private:
 	void generateSeeds();
 
 	/// <summary>
+	/// Remove the watershed border residue after build graph process. Use BFS method. 
+	/// </summary>
+	void removeBorder();
+
+	/// <summary>
 	/// Build the watershed graph. It will be a directed graph.
 	/// </summary>
 	void buildGraph();

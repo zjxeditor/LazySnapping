@@ -29,10 +29,21 @@ WatershedHelper::~WatershedHelper()
 
 void WatershedHelper::Process(bool showRes /* = false */)
 {
-	// Apply watershed method.
 	generateSeeds();
 	watershed(m_srcImage, m_maskImage);
 	buildGraph();
+	removeBorder();
+
+	for (int i = 0; i < m_rows; i++)
+	{
+		int* maskptr = m_maskImage.ptr<int>(i);
+		for (int j = 0; j < m_cols; j++)
+		{
+			if (maskptr[j] <= 0)
+				cout << "Invalid pixel value." << endl;
+		}
+	}
+
 	if (showRes)
 		showWatershedResult();
 }
@@ -93,7 +104,7 @@ void WatershedHelper::buildGraph()
 	{
 		Point startPoint = borderNodes.front();
 		borderNodes.pop();
-		if (cache.at<char>(startPoint) == 1)
+		if (cache.at<char>(startPoint) > 0)
 			continue;
 
 		queue<Point> currentNode;				// Pixel cache for current section.			
@@ -103,6 +114,7 @@ void WatershedHelper::buildGraph()
 		int currentCount = 0;
 		currentNode.push(startPoint);
 		cache.at<char>(startPoint) = 1;	// Mark visited.
+		char visitType = 0;
 
 		// Use BFS to traverse the current section.
 		while (!currentNode.empty())
@@ -111,11 +123,12 @@ void WatershedHelper::buildGraph()
 			currentNode.pop();
 			currentCount++;
 			currentColor += m_srcImage.at<Vec3b>(currentPixel);
+			visitType = cache.at<char>(currentPixel);
 
 			for (int i = 0; i < 4; i++)
 			{
 				Point adjacentPixel = currentPixel + offsets[i];
-				if (!isBound(adjacentPixel) || cache.at<char>(adjacentPixel) == 1)
+				if (!isBound(adjacentPixel) || cache.at<char>(adjacentPixel) > 0)
 					continue;
 
 				int adjacentComp = m_maskImage.at<int>(adjacentPixel);
@@ -123,15 +136,17 @@ void WatershedHelper::buildGraph()
 				{
 					// In the same section.
 					currentNode.push(adjacentPixel);
-					cache.at<char>(adjacentPixel) = 1;
+					cache.at<char>(adjacentPixel) = 1;	// Mark visited.
 					continue;
 				}
 				if(adjacentComp <= 0)
 				{
+					if (visitType == 2)	// Cannot extend along border.
+						continue;
 					// Meet the border. Include border pixels into current section.
 					m_maskImage.at<int>(adjacentPixel) = currentComp;
 					currentNode.push(adjacentPixel);
-					cache.at<char>(adjacentPixel) = 1;
+					cache.at<char>(adjacentPixel) = visitType + 1;	// Mark border.
 					continue;
 				}
 
@@ -190,6 +205,69 @@ void WatershedHelper::generateSeeds()
 	m_seedColCount = 1 + (m_cols - m_hoffset - 1) / m_hspace;
 }
 
+void WatershedHelper::removeBorder()
+{
+	// Use cache to mark the pixels which have been visited.
+	Mat cache(m_maskImage.size(), CV_8SC1);
+	cache = Scalar::all(0);
+	vector<Point> borderPosition;
+	vector<int> res;
+	const Point offsets[4] = { Point(0, -1), Point(-1, 0),  Point(1, 0), Point(0, 1) };
+	
+	for (int i = 0; i < m_rows; i++)
+	{
+		int* maskptr = m_maskImage.ptr<int>(i);
+		for (int j = 0; j < m_cols; j++)
+		{
+			if (maskptr[j] <= 0)
+			{
+				cache = Scalar::all(0);
+				Point startPoint = Point(j, i);
+				queue<Point> currentNodes;
+				currentNodes.push(startPoint);
+				cache.at<char>(startPoint) = 1;
+
+				borderPosition.push_back(startPoint);
+				res.push_back(0);
+
+				while (!currentNodes.empty())
+				{
+					Point currentPixel = currentNodes.front();
+					currentNodes.pop();
+
+					bool flag = false;
+					for (int k = 0; k < 4; k++)
+					{
+						Point adjacentPixel = currentPixel + offsets[k];
+						if (!isBound(adjacentPixel) || cache.at<char>(adjacentPixel) == 1)
+							continue;
+
+						int adjacentComp = m_maskImage.at<int>(adjacentPixel);
+						if(adjacentComp <= 0)
+						{
+							currentNodes.push(adjacentPixel);
+							cache.at<char>(adjacentPixel) = 1;	// Mark border.
+							continue;
+						}
+						
+						flag = true;
+						res[res.size() - 1] = adjacentComp;
+						break;
+					}
+
+					if (flag)
+						break;
+				}
+			}
+		}
+	}
+
+	for (size_t i = 0; i < borderPosition.size(); i++)
+	{
+		m_maskImage.at<int>(borderPosition[i]) = res[i];
+	}
+}
+
 bool WatershedHelper::isBound(const Point& pos) const
 {
 	if (pos.x < 0 || pos.x >= m_cols || pos.y < 0 || pos.y >= m_rows)
@@ -216,7 +294,7 @@ void WatershedHelper::showWatershedResult()
 	}
 	imshow(WatershedWindowName, colorRes);
 	// Draw graph.
-	Point startPos, endPos;
+	/*Point startPos, endPos;
 	for each(auto& connection in m_graph)
 	{
 		startPos = TransCompIdToPoint(connection.Id);
@@ -230,7 +308,7 @@ void WatershedHelper::showWatershedResult()
 		}
 	}
 
-	imshow(GraphWindowName, colorRes);
+	imshow(GraphWindowName, colorRes);*/
 }
 
 Point WatershedHelper::TransCompIdToPoint(int id) const
@@ -247,4 +325,5 @@ Point WatershedHelper::TransCompIdToPoint(int id) const
 
 	return Point(c, r);
 }
+
 
