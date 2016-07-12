@@ -10,10 +10,9 @@
 using namespace std;
 using namespace cv;
 
-Mat Image, BackUp, PaintMask;
+Mat InterImg, ResImg, BackUpImg, PaintMask;
 Point OldPt;
 bool IsPressed = false;
-
 
 int CurrentMode = 0;	// Indicate foreground or background, foreground as default. 0 for foreground and 1 for background.
 const Scalar PaintColor[2] = { CV_RGB(0,0,255),CV_RGB(255,0,0) };
@@ -32,21 +31,21 @@ void main()
 {
 	Help();
 
-	Image = imread("images/flowers.png");
-	if (Image.type() != CV_8UC3)
+	InterImg = imread("images/carsten.jpg");
+	if (InterImg.type() != CV_8UC3)
 	{
 		cout << "Input image type is not CV_8UC3" << endl;
 		return;
 	}
-	Image.copyTo(BackUp);
-	PaintMask.create(Image.size(), CV_8UC1);
+	InterImg.copyTo(BackUpImg);
+	PaintMask.create(InterImg.size(), CV_8UC1);
 	PaintMask = Scalar::all(0);
 
-	WatershedProcessor = make_unique<WatershedHelper>(Image, 5, 5, 2, 2);
+	WatershedProcessor = make_unique<WatershedHelper>(InterImg, 5, 5, 2, 2);
 	WatershedProcessor->Process(true);
 	LazySnappingProcessor = make_unique<LazySnapping>(WatershedProcessor->GetMask(), WatershedProcessor->GetColors(), WatershedProcessor->GetGraph());
 
-	imshow(WindowName, Image);
+	imshow(WindowName, InterImg);
 	setMouseCallback(WindowName, onMouse, nullptr);
 
 	while (true)
@@ -60,10 +59,10 @@ void main()
 		}
 		else if (c == 'r')
 		{
-			BackUp.copyTo(Image);
+			BackUpImg.copyTo(InterImg);
 			PaintMask = Scalar::all(0);
 			CurrentMode = 0;
-			imshow(WindowName, Image);
+			imshow(WindowName, InterImg);
 		}
 		else if (c == 'b')
 		{
@@ -117,9 +116,9 @@ void Process()
 	findContours(segmentation, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
 
 	//FindConnectedComponents(segmentation, contours, true, 4);
-
-	drawContours(Image, contours, -1, Scalar(0, 255, 0));
-	imshow(WindowName, Image);
+	InterImg.copyTo(ResImg);
+	drawContours(ResImg, contours, -1, Scalar(0, 255, 0));
+	imshow(WindowName, ResImg);
 }
 
 void onMouse(int event, int x, int y, int flags, void*)
@@ -132,10 +131,10 @@ void onMouse(int event, int x, int y, int flags, void*)
 	else if (event == CV_EVENT_MOUSEMOVE && flags & CV_EVENT_FLAG_LBUTTON)
 	{
 		Point pt(x, y);
-		line(Image, OldPt, pt, PaintColor[CurrentMode], 2);
+		line(InterImg, OldPt, pt, PaintColor[CurrentMode], 2);
 		line(PaintMask, OldPt, pt, Scalar(CurrentMode + 1), 2);
 		OldPt = pt;
-		imshow(WindowName, Image);
+		imshow(WindowName, InterImg);
 	}
 	else if (event == CV_EVENT_LBUTTONUP)
 	{

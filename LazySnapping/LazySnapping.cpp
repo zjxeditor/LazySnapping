@@ -154,6 +154,7 @@ bool LazySnapping::setMarkPoints(cv::Mat& paintImage)
 // Todo: analyze max flow graph build process.
 void LazySnapping::runMaxFlow()
 {
+	m_graph->reset();
 	// Add nodes.
 	for (size_t i = 0; i < m_nodeColors.size(); i++)
 	{
