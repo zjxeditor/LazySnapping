@@ -5,7 +5,7 @@
 using namespace std;
 using namespace cv;
 
-LazySnapping::LazySnapping(const cv::Mat& maskImage, const std::vector<cv::Vec3b>& nodeColors, const std::vector<Connection>& connections, int clusterNum /* = 64 */, float e2weight /* = 100.0 */)
+LazySnapping::LazySnapping(const cv::Mat& maskImage, const std::vector<cv::Vec3b>& nodeColors, const std::vector<Connection>& connections, int clusterNum /* = 64 */, float e2weight /* = 1000.0 */)
 	: m_maskImage(maskImage), m_nodeColors(nodeColors), m_connections(connections), m_clusterNum(clusterNum), m_e2weight(e2weight)
 {
 	if (m_maskImage.type() != CV_32SC1)
@@ -225,7 +225,7 @@ float LazySnapping::calE2(int compA, int compB)
 
 	Vec3i diff = static_cast<Vec3i>(colorA) - static_cast<Vec3i>(colorB);
 	int distance = diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2];
-	float epsilon = 0.01f;	// 0.01
+	float epsilon = 1.0f;	// 0.01
 
 	return m_e2weight / (epsilon + distance);
 }

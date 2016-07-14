@@ -13,7 +13,7 @@
 class LazySnapping
 {
 public:
-	LazySnapping(const cv::Mat& maskImage, const std::vector<cv::Vec3b>& nodeColors, const std::vector<Connection>& connections, int clusterNum = 64, float e2weight = 100.0);
+	LazySnapping(const cv::Mat& maskImage, const std::vector<cv::Vec3b>& nodeColors, const std::vector<Connection>& connections, int clusterNum = 64, float e2weight = 1000.0);
 	~LazySnapping();
 
 public:

@@ -20,18 +20,16 @@ const string WindowName = "LazySnapping";
 unique_ptr<WatershedHelper> WatershedProcessor;
 unique_ptr<LazySnapping> LazySnappingProcessor;
 
-
 void FindConnectedComponents(const Mat& mask, vector<vector<Point>>& contours, bool poly1_hull0 = true,	float perimScale = 4);
 void onMouse(int event, int x, int y, int flags, void*);
 void Help();
 void Process();
 
-
 void main()
 {
 	Help();
 
-	InterImg = imread("images/carsten.jpg");
+	InterImg = imread("images/ear_2.jpg");
 	if (InterImg.type() != CV_8UC3)
 	{
 		cout << "Input image type is not CV_8UC3" << endl;
@@ -41,7 +39,7 @@ void main()
 	PaintMask.create(InterImg.size(), CV_8UC1);
 	PaintMask = Scalar::all(0);
 
-	WatershedProcessor = make_unique<WatershedHelper>(InterImg, 5, 5, 2, 2);
+	WatershedProcessor = make_unique<WatershedHelper>(InterImg, 10, 10, 2, 2);
 	WatershedProcessor->Process(true);
 	LazySnappingProcessor = make_unique<LazySnapping>(WatershedProcessor->GetMask(), WatershedProcessor->GetColors(), WatershedProcessor->GetGraph());
 
